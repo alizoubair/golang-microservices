@@ -6,7 +6,7 @@ import (
 	"math/rand"
 	"net/http"
 
-	"github.com/alizoubair/golang-microservices/types"
+	"github.com/alizoubair/price-fetcher/types"
 )
 
 type APIFunc func (context.Context, http.ResponseWriter, *http.Request) error

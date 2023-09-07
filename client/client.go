@@ -6,8 +6,21 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/alizoubair/golang-microservices/types"
+	"github.com/alizoubair/price-fetcher/proto"
+	"github.com/alizoubair/price-fetcher/types"
+	"google.golang.org/grpc"
 )
+
+func NewGRPCClient(remoteAddr string) (proto.PriceFetcherClient, error) {
+	conn, err := grpc.Dial(remoteAddr, grpc.WithInsecure())
+	if err != nil {
+		return nil, err
+	}
+
+	c := proto.NewPriceFetcherClient(conn)
+
+	return c, nil
+}
 
 type Client struct {
 	endpoint string
@@ -29,6 +42,14 @@ func (c *Client) FetchPrice(ctx context.Context, ticker string) (*types.PriceRes
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		errResp := map[string]any{}
+		if err := json.NewDecoder(resp.Body).Decode(&errResp); err != nil {
+			return nil, err
+		}
+		return nil, fmt.Errorf("service responded with a non 200 status code: %s", errResp["error"])
 	}
 
 	priceResp := new(types.PriceResponse)
